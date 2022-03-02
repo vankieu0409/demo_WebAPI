@@ -4,6 +4,7 @@ using _2_BUS.Models;
 using DAL.IServices;
 using DAL;
 using DAL.Service;
+using Microsoft.Extensions.DependencyInjection;
 
 
 namespace _2_BUS.Service_BUS
@@ -28,7 +29,7 @@ namespace _2_BUS.Service_BUS
         {
             PS = new Generic_Sevice<PRODUCTS>();
             _lstProductses = new List<PRODUCTS>();
-            
+
             //
             PV = new Generic_Sevice<PRODUCTS_VARIANTS>();
             _lstProductsVariantses = new List<PRODUCTS_VARIANTS>();
@@ -55,6 +56,16 @@ namespace _2_BUS.Service_BUS
             _litSanPhamCuThes = new List<ProductDetail>();
         }
 
+        public List<string> ForeachOption(List<OPTIONS_VALUES> aOptionsValueses)
+        {
+            List<string> beu = new List<string>();
+            foreach (var VARIABLE in aOptionsValueses)
+            {
+                beu.Add($"thuộc tính: {_lsOptionses.Where(c => c.id_Option == VARIABLE.id_Option).Select(c => c.option_Name)}: {VARIABLE.option_Values}");
+            }
+
+            return beu;
+        }
         void loadAllList()
         {
             _lstProductses = PS.getList().Where(c => c.status_Delete == true).ToList();
@@ -75,7 +86,7 @@ namespace _2_BUS.Service_BUS
             _lstVariantsValueses.Clear();
         }
 
-     
+
         public string addNewProduct(string name)
         {
             PRODUCTS prd = new PRODUCTS();
@@ -85,35 +96,94 @@ namespace _2_BUS.Service_BUS
             return "Successful";
         }
 
-        public List<ProductDetail> LoadDatafromDAL()
+        public List<ProductDetailTempplate> LoadDatafromDAL()
         {
-            _litSanPhamCuThes.Clear();
-            var lisdtOption = _lstVariantsValueses
-                .Join(_lstOptionsValueses, vv => vv.id_Values, ov => ov.id_Values, (vv, ov) => new { vv, ov })
-                .Join(_lsOptionses, i => i.ov.id_Option, o => o.id_Option, (i, o) => new { i.vv, i.ov, o })
-                .Join(_lstProductses, i => i.vv.id_Product, p => p.id_Product, (i, p) => new { i.vv, i.ov, i.o, p })
-                .Join(_lstProductsVariantses, i => i.vv.id_Variant, pv => pv.id_Variant,
-                    (i, pv) => new { i.vv, i.p, i.o, i.ov, pv })
-                .ToList();
-            _lstProductsVariantses.ForEach(y =>
-            {
-                var x = new ProductDetail();
-                x.Product = _lstProductses.Where(x => x.id_Product == y.id_Product).FirstOrDefault();
-                x.ProductVariant = y;
-                lisdtOption.Where(i => i.vv.id_Variant == y.id_Variant).ToList().ForEach(z =>
-                {
-                    x.VariantValue.Add(z.vv);
-                    x.Option.Add(z.o);
-                    x.OptionValue.Add(z.ov);
-                });
-                //trạng thái có phải là dữ liệu cũ có trong database hay không nếu cũ : true : false
-                x.Status = true;
-                _litSanPhamCuThes.Add(x);
-            });
-            var lst = new List<ProductDetail>();
-            lst = _litSanPhamCuThes;
-            return lst;
+            //_litSanPhamCuThes.Clear();
+            //var lisdtOption = _lstVariantsValueses
+            //    .Join(_lstOptionsValueses, vv => vv.id_Values, ov => ov.id_Values, (vv, ov) => new { vv, ov })
+            //    .Join(_lsOptionses, i => i.ov.id_Option, o => o.id_Option, (i, o) => new { i.vv, i.ov, o })
+            //    .Join(_lstProductses, i => i.vv.id_Product, p => p.id_Product, (i, p) => new { i.vv, i.ov, i.o, p })
+            //    .Join(_lstProductsVariantses, i => i.vv.id_Variant, pv => pv.id_Variant,
+            //        (i, pv) => new { i.vv, i.p, i.o, i.ov, pv })
+            //    .ToList();
+            //_lstProductsVariantses.ForEach(y =>
+            //{
+            //    var x = new ProductDetail();
+            //    x.Product = _lstProductses.Where(x => x.id_Product == y.id_Product).FirstOrDefault();
+            //    x.ProductVariant = y;
+            //    lisdtOption.Where(i => i.vv.id_Variant == y.id_Variant).ToList().ForEach(z =>
+            //    {
+            //        x.VariantValue.Add(z.vv);
+            //        x.Option.Add(z.o);
+            //        x.OptionValue.Add(z.ov);
+            //    });
+            //    //trạng thái có phải là dữ liệu cũ có trong database hay không nếu cũ : true : false
+            //    x.Status = true;
+            //    _litSanPhamCuThes.Add(x);
+            //});
 
+            List<ProductDetailTempplate> _productDetailTempplates = new List<ProductDetailTempplate>();
+            var lst = (from a in _lstVariantsValueses
+                       group a by new
+                       {
+                           a.id_Product,
+                           a.id_Variant
+                       } into k
+                       join b in _lstProductses on k.Key.id_Product equals b.id_Product
+                       from c in _lstProductsVariantses.Where(c => c.id_Product == k.Key.id_Product && c.id_Variant == k.Key.id_Variant)
+                       select new
+                       {
+                           idSanPham = k.Key.id_Product,
+                           TenSP = b.products_Name,
+                           skud = c.Products_Code,
+                           gia = c.price,
+                           _lisThuocTinh = (from vv in _lstVariantsValueses
+                                            join op in _lsOptionses on vv.id_Option equals op.id_Option
+                                            join ov in _lstOptionsValueses on vv.id_Values equals ov.id_Values
+                                            where vv.id_Product == k.Key.id_Product && vv.id_Variant == k.Key.id_Variant
+                                            select new
+                                            {
+                                                tenThuocTinh = op.option_Name,
+                                                giaTriThuocTinh = ov.option_Values
+                                            }),
+
+                       }).ToList();
+
+           
+
+            foreach (var x in lst)
+            {
+                ProductDetailTempplate pdt = new ProductDetailTempplate();
+                List<ThuocTinh> a = new List<ThuocTinh>();
+                foreach (var x1 in x._lisThuocTinh)
+                {
+                    ThuocTinh acc = new ThuocTinh();
+                    acc.Option = x1.tenThuocTinh;
+                    acc.Value = x1.giaTriThuocTinh;
+                    a.Add(acc);
+                }
+
+                pdt.Id = x.idSanPham;
+                pdt.Name = x.TenSP;
+                pdt.Skud = x.skud;
+                pdt.Price = x.gia;
+                pdt.ThuocTinhList = a;
+
+                _productDetailTempplates.Add(pdt);
+            }
+            return _productDetailTempplates;
+
+        }
+
+        public List<string> ForeachOption(List<ThuocTinh> aOptionsValueses)
+        {
+            List<string> optionList = new List<string>();
+
+            foreach (var x in aOptionsValueses)
+            {
+                optionList.Add($"{x.Option}:{x.Value}");
+            }
+            return optionList;
         }
 
 

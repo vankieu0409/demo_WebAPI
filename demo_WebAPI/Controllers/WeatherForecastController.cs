@@ -19,9 +19,15 @@ namespace demo_WebAPI.Controllers
         }
 
         [HttpGet(Name = "GetWeatherForecast/{id}")]
-        public int Get(int id)
+        public IEnumerable<WeatherForecast> Get()
         {
-            return id;
+            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+                {
+                    Date = DateTime.Now.AddDays(index),
+                    TemperatureC = Random.Shared.Next(-20, 55),
+                    Summary = Summaries[Random.Shared.Next(Summaries.Length)]
+                })
+                .ToArray();
         }
     }
 }

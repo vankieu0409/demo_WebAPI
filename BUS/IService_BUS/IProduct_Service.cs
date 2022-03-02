@@ -5,8 +5,10 @@ namespace _2_BUS.IService_BUS
 {
     public interface IProduct_Service
     {
-        public List<ProductDetail> LoadDatafromDAL();
-       
+        public List<ProductDetailTempplate> LoadDatafromDAL();
+        List<string> ForeachOption(List<ThuocTinh> aOptionsValueses);
+
+
         public string addNewProduct(string name);
 
         public string editProductDetail(ProductDetail productDetail);

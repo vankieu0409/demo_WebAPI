@@ -1,8 +1,11 @@
-﻿using _2_BUS.IService_BUS;
+﻿using System.Runtime.CompilerServices;
+using _2_BUS.IService_BUS;
 using _2_BUS.Models;
 using _2_BUS.Service_BUS;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.VisualBasic.Syntax;
+using NuGet.Protocol;
 
 namespace demo_WebAPI.Controllers
 {
@@ -12,13 +15,28 @@ namespace demo_WebAPI.Controllers
     {
         private IProduct_Service _productService = new Service_formSP();
         [HttpGet(Name = "GetProduct/{id}")]
-        public string GetProductDetail(int id)
+        public ProductDetailTempplate GetProductDetail(int id)
         {
-            List<ProductDetail> products = new List<ProductDetail>();
-            products= _productService.LoadDatafromDAL();
-            string a=products.Find(c => c.Product.id_Product == id).Product.products_Name;
-            return a;
+            List<ProductDetailTempplate> products = new List<ProductDetailTempplate>();
+            products = _productService.LoadDatafromDAL();
+            ProductDetailTempplate qq = products.FirstOrDefault(c => c.Id == id);
+
+
+            return qq;
+
 
         }
+        //[HttpGet(Name = "GetProducttest/{id}")]
+        //public string GetProductDetailTest(int id)
+        //{
+        //    List<ProductDetailTempplate> products = new List<ProductDetailTempplate>();
+        //    products = _productService.LoadDatafromDAL();
+        //    ProductDetailTempplate qq = products.FirstOrDefault(c => c.Id == id);
+
+        //    string kku= $"Tên:{qq.Name}; Sku: {qq.Skud} {_productService.ForeachOption(qq.ThuocTinhList)}";
+        //    return kku;
+
+
+        //}
     }
 }
