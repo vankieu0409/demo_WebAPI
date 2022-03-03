@@ -14,27 +14,33 @@ namespace demo_WebAPI.Controllers
     public class ProductsController : ControllerBase
     {
         private IProduct_Service _productService = new Service_formSP();
-        [HttpGet(Name = "GetProduct/{id}")]
-        public ProductDetailTempplate GetProductDetail(int id)
+        [HttpGet]
+        public List<ProductDetailTempplate> GetProductDetail(int id)
         {
             List<ProductDetailTempplate> products = new List<ProductDetailTempplate>();
             products = _productService.LoadDatafromDAL();
             ProductDetailTempplate qq = products.FirstOrDefault(c => c.Id == id);
 
-
-            return qq;
+            return products;
 
 
         }
-        //[HttpGet(Name = "GetProducttest/{id}")]
-        //public string GetProductDetailTest(int id)
+
+        [HttpGet("{id}")]
+        public ProductDetailTempplate GetProductDetailTempplate(int id)
+        {
+            List<ProductDetailTempplate> products = new List<ProductDetailTempplate>();
+            products = _productService.LoadDatafromDAL();
+            ProductDetailTempplate qq = products.FirstOrDefault(c => c.Id == id);
+            return qq;
+        }
+
+        //[HttpGet(Name = "GetProduct/5")]
+        //public List<ProductDetailTempplate> GetAllProductDetailTest()
         //{
         //    List<ProductDetailTempplate> products = new List<ProductDetailTempplate>();
         //    products = _productService.LoadDatafromDAL();
-        //    ProductDetailTempplate qq = products.FirstOrDefault(c => c.Id == id);
-
-        //    string kku= $"Tên:{qq.Name}; Sku: {qq.Skud} {_productService.ForeachOption(qq.ThuocTinhList)}";
-        //    return kku;
+        //    return products;
 
 
         //}
